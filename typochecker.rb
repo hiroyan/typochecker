@@ -44,22 +44,22 @@ module SpellingSupport
   # other -> append ed
   PAST_TENSE_RULES = [
     # {
-    #   rule: /er$/,
+    #   regex: /er$/,
     #   convert: -> (word) { "#{word}ed" }
     # },
     {
-      rule: /[#{CONSONANTS}][#{VOWELS}][#{CONSONANTS}]$/,
+      regex: /[#{CONSONANTS}][#{VOWELS}][#{CONSONANTS}]$/,
       convert: -> (word) { "#{word}#{word[-1]}ed" } },
     {
-      rule: /[#{CONSONANTS}]y$/,
+      regex: /[#{CONSONANTS}]y$/,
       convert: -> (word) { "#{word.chop}ied" }
     },
     {
-      rule: /e$/,
+      regex: /e$/,
       convert: -> (word) { "#{word}d" }
     },
     {
-      rule: //,
+      regex: //,
       convert: -> (word) { "#{word}ed" }
     }
   ]
@@ -72,19 +72,19 @@ module SpellingSupport
   # other -> append ing
   PRESENT_PROGRESSIVE_TENSE_RULES = [
     {
-      rule: /ie$/,
+      regex: /ie$/,
       convert: -> (word) { "#{word.chop.chop}ying" }
     },
     {
-      rule: /[#{CONSONANTS}][#{VOWELS}][#{CONSONANTS}]$/,
+      regex: /[#{CONSONANTS}][#{VOWELS}][#{CONSONANTS}]$/,
       convert: -> (word) { "#{word}#{word[-1]}ing" }
     },
     {
-      rule: /e$/,
+      regex: /e$/,
       convert: -> (word) { "#{word.chop}ing" }
     },
     {
-      rule: //,
+      regex: //,
       convert: -> (word) { "#{word}ing" }
     }
   ]
@@ -97,19 +97,19 @@ module SpellingSupport
   # other -> append s
   PLURAL_FORM_RULES = [
     {
-      rule: /(f|fe)$/,
+      regex: /(f|fe)$/,
       convert: -> (word) { "#{word.sub(/(f|fe)$/, '')}ves" }
     },
     {
-      rule: /[#{CONSONANTS}]y$/,
+      regex: /[#{CONSONANTS}]y$/,
       convert: -> (word) { "#{word.chop}ies" }
     },
     {
-      rule: /(s|sh|ch|x)$/,
+      regex: /(s|sh|ch|x)$/,
       convert: -> (word) { "#{word}es" }
     },
     {
-      rule: //,
+      regex: //,
       convert: -> (word) { "#{word}s" }
     }
   ]
@@ -119,7 +119,7 @@ module SpellingSupport
 
   # convert word with a rule
   def convert_word(rules, word)
-    rules.find { |rule| word =~ rule[:rule] }[:convert].call(word)
+    rules.find { |rule| word =~ rule[:regex] }[:convert].call(word)
   end
 
   # load file of word list and store each words in dictionary (Hash)
