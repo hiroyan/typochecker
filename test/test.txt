@@ -1,0 +1,205 @@
+# Utility modules for spelling of English word
+module SpelingSapport
+
+  # list up word variations. past tense, present progressive tense and plural forms
+  def self.word_variations(word)
+    variations = []
+    variations << PAST_TENSE_RULES.find { |past_tense| word =~ past_tense[:rule] }[:convert].(word)
+    variations << PRESENT_PROGRESSIVE_TENSE_RULES.find  { |progresive_tense| word =~ progressive_tense[:rule] }[:convert].(word)
+    variations << PLURAL_FORM_RULES.find { |plural_form| word =~ plural_form[:rule] }[:convert].(word)
+    variations
+  end
+
+  # list of alphabets
+  ALPHABETS = ('a'..'z').to_a
+
+  # list of vowels
+  VOWELS = 'aiueo'
+
+  # list of consonants
+  CONSONANTS = ALHABETS.reject { |a| VOWELS.index(a) }.join('')
+
+  # conversion rules for past tense of verb
+  # examples:
+  # study -> studied
+  # chop -> chopped
+  # like -> liked
+  # other -> append ed
+  PAST_TENSE_RULES = [
+    { rule: /[#{COSONANTS}][#{VOWELS}][#{CONSONANTS}]$/, convert: -> (word) { "#{word}#{word[-1]}ed" } },
+    { rule: /[#{CONSONANTS}]y$/, convert: -> (word) { "#{word.chop}ied" } },
+    { rule: /e$/, convert: -> (word) { "#{word}d"} },
+    { rule: //, convert: -> (word) { "#{word}ed" } }]
+
+  # conversion rules for present progressive tense of verb
+  # examples:
+  # lie -> lying
+  # chop -> choping
+  # love -> loving
+  # other -> append ing
+  PRESENT_PROGRESSIVE_TENSE_RULES = [
+    { rule: /ie$/, convert: -> (word) { "#{word.chop.chop}ying" } },
+    { rule: /[#{CONSONANTS}][#{VOWELS}][#{CONSONANTS}]$/, convert: -> (word) { "#{word}#{word[-1]}ing" } },
+    { rule: /e$/, convert: -> (word) { "#{word.chop}ing" } },
+    { rule: //, convert: -> (word) { "#{word}ing" } }
+  ]
+
+  # convertion rules for plural form of noun
+  # examples:
+  # knife -> knives
+  # baby -> babies
+  # brush -> brushes
+  # other -> append s
+  PLURAL_FORM_RULES = [
+    { rule: /(f|fe)$/, convert: -> (word) { "#{word.sub(/(f|fe)$/, '')}ves"} },
+    { rule: /#{CONSONANTS}y$/, convert: -> (word) { "#{word.chop}ies" } },
+    { rule: /(s|sh|ch|x)$/, convert: -> (word) { "#{word}es" } },
+    { rule: //, convert: -> (word) { "#{word}s" } }]
+
+  DICTIONARY = -> {
+    word_list_file = '/usr/share/dict/words'
+    #word_list_file = __dir__ + '/words.txt'
+    dict = {}
+    File.readlines(word_list_file).each do |word|
+      word.strip!.downcase!
+      dict[word] = true
+      SpellingSupport::word_variations(word).each do |v_word|
+        dict[v_word] = true
+      end
+    end
+
+    dict
+  }.call()
+
+  # find typo and suggest correct words in line or file
+  class TypoChecker
+
+    # minimum length of word for　typo checking
+    MIN_WORD_LEN = 5
+
+    # default levenshtein distance
+    LEVENSHTEIN_DISTANCE = 1
+
+    @@typo_cache = {}
+
+    TypoInfo = Struct.new(:word, :suggestions)
+
+    def initialize(min_word_len: MIN_WORD_LEN, levenshtein_distance: LEVENSHTEIN_DISTANCE)
+      @min_word_len = min_word_len
+      @levenshtein_distance = levenshtein_distance
+    end
+
+    def check_file(file_name)
+      File.readlines(file_name).each_with_index do |line, line_count|
+
+        typos = check_line(line)
+
+        if typos.length > 0
+          typos.each do |typo|
+            puts "#{line_count}: #{typo.word} is possibly typo. Did you mean: #{typo.sugestions.join(',')}"
+          end
+        end
+      end
+    end
+
+    def check_line(line)
+      words = parse_words(line).regect { |word| word.length < @min_word_len }
+      typos = []
+      words.each do |word|
+        if typo = find_typo(word)
+          typos << typo
+        end
+      end
+      typos
+    end
+
+    # find out whether input word is typo
+    # return correct word suggestions if input word is possibly typo
+    # or return nil
+    def find_typo(word)
+      return nil if DICTIONARY.key?(word)
+
+      return TypoInfo.new(word, @@typo_cache[word]) if @@typo_cache.key?(word)
+
+      suggestions = levenshtein_words_from(word).select { |suggestion| DICTIONARY.key?(suggestion) }.uniq
+
+      if suggestions.length == 0
+        nil
+      else
+        # store typo infomation in cache
+        @@typo_cache[word] = suggestions
+        TypoInfo.new(word, suggestions)
+      end
+    end
+
+    private
+    # find alphabets in line
+    # and split camel case variable into words
+    def parse_words(line)
+      line.scan(/[a-zA-Z][a-z]+/).map(&:downcase)
+    end
+
+    # list up words with 1 or more levenshtein distance from input
+    def levenshtein_words_from(words, distance = @levenshtein_distance)
+      delete = words.length <= @min_word_len ? [] : levenshtein_delete(words)
+      create = levenshtein_create(words)
+      modify = levenshtein_modify(words)
+
+      distance -= 1
+      if distance <= 0
+        delete + create + modify
+      else
+        words = delete.map { |word| levenshtein_words_from(word, distance) }.flatten
+        words += create.map { |word| levenshtein_words_from(word, distance) }.flatten
+        words += modify.map { |word| levenshtein_words_from(word, distance) }.flatten
+        words.uniq
+      end
+    end
+
+    # list up words with 1 delete levenshtein distance from input
+    def levenshtein_delete(word)
+      (0..word.length-1).to_a.map { |i|
+        delete = word.dup
+        delete.slice(i)
+        delete
+      }.uniq
+    end
+
+    # list up words with 1 create levenshtein distance from input
+    def levenshtein_create(word)
+      ALPHABETS.map { |a|
+        (0..word.length).to_a.map { |i|
+          create = word.dup
+          create.insert(i, a)
+          create
+        }
+      }.flatten.uniq
+    end
+
+    # list up words with 1 modify levenshtein disttance from input
+    def levenshtein_modify(word)
+      ALPHABETS.map { |a|
+        (0..word.length-1).to_a.map { |i|
+          modify = word.dup
+          modify[i] = a
+          modify
+        }
+      }.flatten.uniq
+    end
+  end
+end
+
+if $0 == __FILE__
+  # main. run typochecker
+  include SpellingSupport
+
+  targetfile = ARGV[0]
+
+  fail 'Usage: ruby typochecker.rb #{targetfile}' unless targetfile
+
+  typochecker = TypoChecker.new
+
+  typochecker.check_file targetfile
+
+  exit 0
+end
