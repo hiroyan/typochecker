@@ -16,17 +16,21 @@ Typo Checker は、テキストファイル内の英単語から typo の可能�
 - テキストから小文字語と一部の大文字トークンを抽出する
 - 削除・挿入・置換による候補語を生成する
 - typo の可能性がある語と修正候補を表示する
-- `typochecker.rb` から CLI として実行できる
+- gem としてインストールし、`typochecker` コマンドとして実行できる
 
 ## 重要なファイル
 
 | パス | 役割 |
 | --- | --- |
-| `typochecker.rb` | 実装本体と CLI |
+| `lib/typochecker.rb` | gem 読み込み時の入口 |
+| `lib/typochecker/` | gem として読み込まれるライブラリ本体 |
+| `exe/typochecker` | gem install 後に使える CLI |
+| `typochecker.gemspec` | gem のメタデータ |
+| `typochecker.rb` | 旧来の直接実行との互換用入口 |
 | `words.txt` | 同梱英語辞書 |
 | `keyword.txt` | 追加で許可する語 |
 | `test/test.txt` | サンプル入力 |
-| `test/typocheckerSpec.rb` | 現在の検証スクリプト |
+| `test/typochecker_test.rb` | Minitest による自動テスト |
 
 ## プロダクトとしての意図
 
@@ -38,11 +42,9 @@ Typo Checker は、テキストファイル内の英単語から typo の可能�
 - 隠れたヒューリスティックより明示的な振る舞い
 - 大規模な書き換えより小さな改善の積み重ね
 
-## 気づいておくべき粗さ
+## 現在の設計上の注意点
 
-- README はまだ最小限です。
-- 既存のテストファイルは、厳密な spec というより benchmark / smoke test に近いです。
-- CLI とコアロジックが同じファイルにあります。
+- `typochecker.rb` は互換用の薄い入口として残っています。
 - Levenshtein 候補生成は、距離が大きくなると計算量が増えます。
 
 これらは、すべての作業で即座に直すべき問題ではありません。

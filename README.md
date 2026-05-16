@@ -11,6 +11,17 @@ Levenshtein 距離を使って、英単語の typo 候補を検出する Ruby �
 - 追加の許可語を `keyword.txt` から読み込み可能
 - CLI からそのまま実行可能
 
+## インストール
+
+現時点では、リポジトリ上で gem をビルドしてローカルインストールできます。
+
+```sh
+gem build typochecker.gemspec
+gem install ./typochecker-0.1.0.gem
+```
+
+インストール後は、`typochecker` コマンドとして実行できます。
+
 ## 必要なもの
 
 - Ruby
@@ -18,16 +29,22 @@ Levenshtein 距離を使って、英単語の typo 候補を検出する Ruby �
 
 ## 使い方
 
-同梱辞書を使ってサンプルファイルを確認する場合:
+gem としてインストールした後にファイルを検査する場合:
+
+```sh
+typochecker path/to/input.txt
+```
+
+任意の辞書や追加許可語を指定する場合:
+
+```sh
+typochecker -d words.txt -k keyword.txt test/test.txt
+```
+
+リポジトリ上で直接実行する場合:
 
 ```sh
 ruby typochecker.rb -d words.txt -k keyword.txt test/test.txt
-```
-
-システム辞書を使う場合:
-
-```sh
-ruby typochecker.rb path/to/input.txt
 ```
 
 オプション:
@@ -40,7 +57,7 @@ ruby typochecker.rb path/to/input.txt
 ## 実行例
 
 ```sh
-ruby typochecker.rb -d words.txt -k keyword.txt test/test.txt
+typochecker -d words.txt -k keyword.txt test/test.txt
 ```
 
 出力は次のような形式です。
@@ -51,18 +68,33 @@ ruby typochecker.rb -d words.txt -k keyword.txt test/test.txt
 
 ## ファイル構成
 
-- `typochecker.rb` — 実装本体と CLI
+- `lib/` — gem として読み込まれるライブラリ本体
+- `exe/typochecker` — gem install 後に使える CLI
+- `typochecker.gemspec` — gem のメタデータ
+- `typochecker.rb` — 旧来の直接実行との互換用入口
 - `words.txt` — 同梱辞書
 - `keyword.txt` — 追加で許可する語
 - `test/test.txt` — サンプル入力
-- `test/typocheckerSpec.rb` — 現在の検証スクリプト
+- `test/typochecker_test.rb` — Minitest による自動テスト
 
 ## 開発
 
-現在の検証スクリプトは次で実行できます。
+標準のテストは次で実行できます。
 
 ```sh
-ruby test/typocheckerSpec.rb
+rake test
+```
+
+gem のビルド確認は次で行えます。
+
+```sh
+gem build typochecker.gemspec
+```
+
+CLI の動作確認をリポジトリ上で行う場合:
+
+```sh
+ruby -Ilib exe/typochecker -d words.txt -k keyword.txt test/test.txt
 ```
 
 ## Agent 開発

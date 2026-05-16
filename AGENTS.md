@@ -14,10 +14,14 @@
 
 ## プロジェクト構成
 
-- `typochecker.rb` — 実装本体と CLI の入口
+- `lib/typochecker.rb` — gem 読み込み時の入口
+- `lib/typochecker/` — ライブラリ本体
+- `exe/typochecker` — gem install 後に使える CLI
+- `typochecker.gemspec` — gem のメタデータ
+- `typochecker.rb` — 旧来の直接実行との互換用入口
 - `words.txt` — 同梱辞書データ
 - `keyword.txt` — プロジェクト固有の許可語
-- `test/typocheckerSpec.rb` — 現在の検証スクリプト
+- `test/typochecker_test.rb` — Minitest による自動テスト
 - `docs/` — Agent と人間が共有するプロジェクト文脈
 - `prompts/` — Codex 向けの再利用プロンプト
 
@@ -30,12 +34,20 @@
 
 ## 検証
 
-現時点では本格的なテストフレームワークは導入されていません。
-既存の検証スクリプトは次で実行できます。
+標準のテストは次で実行できます。
 
 ```sh
-ruby test/typocheckerSpec.rb
+rake test
 ```
 
-将来、正式なテストスイートを導入した場合は、このファイルと
-`docs/development.md` をあわせて更新してください。
+gem のビルド確認が必要な変更では、あわせて次も実行してください。
+
+```sh
+gem build typochecker.gemspec
+```
+
+CLI 変更時は、必要に応じて次も確認してください。
+
+```sh
+ruby -Ilib exe/typochecker -d words.txt -k keyword.txt test/test.txt
+```

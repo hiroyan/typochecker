@@ -14,7 +14,7 @@
 
 ## 主要コンポーネント
 
-### `SpellingSupport`
+### `Typochecker::SpellingSupport`
 
 共有ヘルパーと定数を持ちます。
 
@@ -23,7 +23,7 @@
 - 辞書構築
 - 単語抽出
 
-### `SpellingSupport::TypoChecker`
+### `Typochecker::TypoChecker`
 
 typo 検出の振る舞いを担当します。
 
@@ -33,10 +33,24 @@ typo 検出の振る舞いを担当します。
 - ファイル単位 / 行単位の検査
 - Levenshtein 候補生成
 
-### CLI 部分
+### `exe/typochecker`
 
-`typochecker.rb` の末尾は、ファイルが直接実行された場合にだけ動きます。
-`-d` と `-k` を解釈し、チェッカーを生成して、対象ファイルの結果を表示します。
+gem install 後に使える CLI です。`-d` と `-k` を解釈し、チェッカーを生成して、
+対象ファイルの結果を表示します。
+
+### `typochecker.rb`
+
+旧来の直接実行・`require` 利用との互換用入口です。
+実装本体は `lib/` 配下へ移っています。
+
+## ファイル境界
+
+- `lib/typochecker.rb` — ライブラリ読込の入口と既定辞書パス
+- `lib/typochecker/spelling_support.rb` — 辞書構築、語形変化、単語抽出
+- `lib/typochecker/typo_checker.rb` — typo 検出本体
+- `lib/typochecker/version.rb` — gem バージョン
+- `exe/typochecker` — CLI
+- `typochecker.rb` — 後方互換用入口
 
 ## データモデル
 

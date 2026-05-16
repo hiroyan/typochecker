@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+require 'typochecker'
+
+options = {}
+parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: typochecker [options] TARGET_FILE'
+  opts.on('-d', '--dictionary DICT', '使用する辞書ファイル') { |dict| options[:dictionary_file] = dict }
+  opts.on('-k', '--keyword KEYWORD_FILE', '追加で許可する語の一覧') { |keyword| options[:keyword_file] = keyword }
+end
+
+parser.parse!(ARGV)
+target_file = ARGV.shift
+
+abort(parser.to_s) unless target_file
+
+checker = Typochecker::TypoChecker.new(**options)
+print checker.check_file(target_file)
