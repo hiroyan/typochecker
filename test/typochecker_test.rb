@@ -25,7 +25,7 @@ class TypocheckerTest < Minitest::Test
 
     refute_nil typo
     assert_equal 'progresive', typo.word
-    assert_includes typo.suggestions, 'progressive'
+    assert_equal 'progressive', typo.suggestions.first
   end
 
   def test_find_typo_returns_nil_for_dictionary_word
@@ -37,5 +37,23 @@ class TypocheckerTest < Minitest::Test
 
     assert_includes result, '7: progresive is possibly typo.'
     assert_includes result, 'Did you mean: progressive'
+  end
+
+  def test_transposed_typo_is_detected
+    typo = @checker.find_typo('recieve')
+
+    refute_nil typo
+    assert_equal 'receive', typo.suggestions.first
+  end
+
+  def test_common_typos_rank_expected_word_in_top_three
+    fixtures = File.readlines(File.expand_path('fixtures/common_typos.tsv', __dir__), chomp: true)
+
+    fixtures.each do |line|
+      typo, expected = line.split("\t")
+      suggestions = @checker.find_typo(typo)&.suggestions || []
+
+      assert_includes suggestions.first(3), expected, "#{typo} should suggest #{expected} in top 3"
+    end
   end
 end

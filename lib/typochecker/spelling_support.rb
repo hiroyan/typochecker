@@ -74,6 +74,9 @@ module Typochecker
       ]
     end
 
+    BASE_WORD = 0
+    GENERATED_VARIATION = 1
+
     def make_dictionary(dictionary_file, keyword_file = nil)
       {}.tap do |dictionary|
         load_word_list_file(dictionary, dictionary_file)
@@ -94,9 +97,9 @@ module Typochecker
     def load_word_list_file(dictionary, word_list_file)
       File.readlines(word_list_file).each do |word|
         normalized_word = word.strip.downcase
-        dictionary[normalized_word] = true
+        dictionary[normalized_word] = BASE_WORD
         word_variations(normalized_word).each do |variation|
-          dictionary[variation] = true
+          dictionary[variation] ||= GENERATED_VARIATION
         end
       end
     end

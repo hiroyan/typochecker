@@ -2,6 +2,8 @@
 
 require_relative 'typochecker/version'
 require_relative 'typochecker/spelling_support'
+require_relative 'typochecker/candidate_generator'
+require_relative 'typochecker/suggestion_ranker'
 require_relative 'typochecker/typo_checker'
 
 # Levenshtein 距離を使って英単語の typo 候補を検出するライブラリ。

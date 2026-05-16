@@ -15,6 +15,8 @@ module Typochecker
       @min_word_len = min_word_len
       @levenshtein_distance = levenshtein_distance
       @dictionary = SpellingSupport.make_dictionary(dictionary_file, keyword_file)
+      @candidate_generator = CandidateGenerator.new(min_word_len: min_word_len)
+      @suggestion_ranker = SuggestionRanker.new(@dictionary)
       @typo_cache = {}
     end
 
@@ -38,46 +40,18 @@ module Typochecker
       return nil if @dictionary.key?(word)
       return TypoInfo.new(word, @typo_cache[word]) if @typo_cache.key?(word)
 
-      suggestions = levenshtein_words(word).select { |suggestion| @dictionary.key?(suggestion) }.uniq
+      suggestions = candidate_words(word).select { |suggestion| @dictionary.key?(suggestion) }.uniq
       return nil if suggestions.empty?
 
+      suggestions = @suggestion_ranker.rank(word, suggestions)
       @typo_cache[word] = suggestions
       TypoInfo.new(word, suggestions)
     end
 
     private
 
-    def levenshtein_words(word, distance = @levenshtein_distance)
-      words = word.length <= @min_word_len ? [] : levenshtein_delete(word)
-      words += levenshtein_create(word)
-      words += levenshtein_modify(word)
-
-      distance -= 1
-      return words if distance <= 0
-
-      words.flat_map { |candidate| levenshtein_words(candidate, distance) }.uniq
-    end
-
-    def levenshtein_delete(word)
-      (0...word.length).map do |index|
-        word.dup.tap { |candidate| candidate.slice!(index) }
-      end.uniq
-    end
-
-    def levenshtein_create(word)
-      SpellingSupport::ALPHABETS.flat_map do |alphabet|
-        (0..word.length).map do |index|
-          word.dup.tap { |candidate| candidate.insert(index, alphabet) }
-        end
-      end.uniq
-    end
-
-    def levenshtein_modify(word)
-      SpellingSupport::ALPHABETS.flat_map do |alphabet|
-        (0...word.length).map do |index|
-          word.dup.tap { |candidate| candidate[index] = alphabet }
-        end
-      end.uniq
+    def candidate_words(word)
+      @candidate_generator.generate(word, distance: @levenshtein_distance)
     end
   end
 end

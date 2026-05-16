@@ -29,6 +29,7 @@ ruby typochecker.rb -d words.txt -k keyword.txt test/test.txt
 - パッケージ化や UX 改善が目的でない限り、簡素な CLI を保つ。
 - 実装の正本は `lib/` 配下とし、`typochecker.rb` には互換用以上の責務を増やさない。
 - バグ修正や、単語抽出 / 候補生成の挙動変更では、焦点を絞ったテストを追加する。
+- 候補順位を変えるときは、`test/fixtures/common_typos.tsv` の top-3 品質を落とさない。
 - 性能が論点になる場合は、最適化の前に候補数の増え方を観測する。
 
 ## 将来の改善候補
@@ -36,7 +37,8 @@ ruby typochecker.rb -d words.txt -k keyword.txt test/test.txt
 以下は今後の候補であり、毎回必ず片づけるべき cleanup ではありません。
 
 1. 行番号を 0 始まりにするか 1 始まりにするか明確化する
-2. 辞書が大きくなる、または既定距離を上げる場合に、より効率的な探索方法を検討する
+2. 実運用文書から評価データセットを作り、precision / recall を測定する
+3. 辞書が大きくなる、または既定距離を上げる場合に、より効率的な探索方法を検討する
 
 ## Codex タスクの完了条件
 
